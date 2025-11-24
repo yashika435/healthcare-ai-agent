@@ -851,36 +851,18 @@ if st.button("Find Recommended Doctor"):
             if not ranked:
                 st.warning("Cannot detect disease. Try adding more symptoms.")
             else:
-                # Use same logic as AI helper
-                top_disease_name, specialities = suggest_specialities(ranked)
+                # STEP A: take only TOP disease
+                top_disease = ranked[0]["disease"]
 
-                # If doctor engine returns nothing, fall back to mapping
-                if not specialities:
-                    speciality = scheduler_speciality(top_disease_name)
-                    specialities = [speciality]
+                # STEP B: Map disease → speciality using your scheduler_speciality()
+                speciality = scheduler_speciality(top_disease)
 
-                doctors_ranked = rank_doctors(specialities)
+                # Save in session
+                st.session_state.sched_disease = top_disease
+                st.session_state.sched_speciality = speciality
 
-                if not doctors_ranked:
-                    # last fallback: just use speciality mapping directly
-                    speciality = scheduler_speciality(top_disease_name)
-                    st.session_state.sched_speciality = speciality
-                    st.session_state.sched_disease = top_disease_name
-                    st.session_state.sched_recommended_doctor = None
-                    st.success(f"Detected Condition: **{top_disease_name}**")
-                    st.info(f"Recommended Specialist: **{speciality}**")
-                else:
-                    best_doctor = doctors_ranked[0]
-                    final_speciality = best_doctor["speciality"]
-                    st.session_state.sched_speciality = final_speciality
-                    st.session_state.sched_disease = top_disease_name
-                    st.session_state.sched_recommended_doctor = best_doctor["name"]
-
-                    st.success(f"Detected Condition: **{top_disease_name}**")
-                    st.info(
-                        f"Recommended Specialist: **{final_speciality}**  "
-                        f"(Suggested doctor: **{best_doctor['name']}**)"
-                    )
+                st.success(f"Detected Condition: **{top_disease}**")
+                st.info(f"Recommended Specialist: **{speciality}**")
 
 # STEP 2 – doctor selection
 if st.session_state.sched_speciality:

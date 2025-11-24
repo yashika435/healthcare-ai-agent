@@ -808,15 +808,15 @@ DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 SLOTS = ["10:00 AM", "1:00 PM", "4:00 PM"]
 
 # Make all doctors available on ALL days with same 3 slots
+# Doctor availability: ALL doctors available on ALL days
 DOCTOR_AVAILABILITY = {}
 for speciality, doctors in DOCTOR_DB.items():
     DOCTOR_AVAILABILITY[speciality] = {}
     for d in doctors:
         name_doc = d["name"]
         DOCTOR_AVAILABILITY[speciality][name_doc] = {
-            day: SLOTS[:] for day in DAYS  # all 6 days
+            day: SLOTS for day in DAYS
         }
-
 
 
 def weekday_from_date(dt):
@@ -897,42 +897,42 @@ if st.session_state.sched_doctor:
 
         st.write(f"Selected Day: **{weekday}**")
 
+        # 💥 Since all doctors available on ALL days:
         slots_map = DOCTOR_AVAILABILITY[
             st.session_state.sched_speciality
         ].get(doctor, {})
 
-        if weekday in slots_map:
-            slots = slots_map[weekday]
-            st.subheader("🕒 Available Slots")
-            selected_slot = st.radio("Choose a time slot:", slots)
+        # ALWAYS TRUE now because all days exist in the map
+        slots = slots_map.get(weekday, SLOTS)
 
-            # STEP 4 – confirm + store in DB
-            if st.button("Confirm Appointment"):
-                conn = sqlite3.connect("healthcare.db")
-                c = conn.cursor()
-                c.execute(
-                    """
-                    INSERT INTO appointments (doctor, speciality, patient, date, time)
-                    VALUES (?, ?, ?, ?, ?)
-                    """,
-                    (
-                        doctor,
-                        st.session_state.sched_speciality,
-                        appt_patient_name,
-                        appt_date.strftime("%Y-%m-%d"),
-                        selected_slot,
-                    ),
-                )
-                conn.commit()
-                conn.close()
+        st.subheader("🕒 Available Slots")
+        selected_slot = st.radio("Choose a time slot:", slots)
 
-                st.success(
-                    f"✔ Appointment Confirmed!\n\n"
-                    f"📌 Patient: **{appt_patient_name}**\n"
-                    f"👨‍⚕️ Doctor: **{doctor}**\n"
-                    f"🏥 Speciality: **{st.session_state.sched_speciality}**\n"
-                    f"📅 Date: **{appt_date.strftime('%Y-%m-%d')}**\n"
-                    f"⏰ Time: **{selected_slot}**"
-                )
-        else:
-            st.warning("❌ This doctor is not available on the selected day.")
+        # STEP 4 – confirm + store in DB
+        if st.button("Confirm Appointment"):
+            conn = sqlite3.connect("healthcare.db")
+            c = conn.cursor()
+            c.execute(
+                """
+                INSERT INTO appointments (doctor, speciality, patient, date, time)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    doctor,
+                    st.session_state.sched_speciality,
+                    appt_patient_name,
+                    appt_date.strftime("%Y-%m-%d"),
+                    selected_slot,
+                ),
+            )
+            conn.commit()
+            conn.close()
+
+            st.success(
+                f"✔ Appointment Confirmed!\n\n"
+                f"📌 Patient: **{appt_patient_name}**\n"
+                f"👨‍⚕️ Doctor: **{doctor}**\n"
+                f"🏥 Speciality: **{st.session_state.sched_speciality}**\n"
+                f"📅 Date: **{appt_date.strftime('%Y-%m-%d')}**\n"
+                f"⏰ Time: **{selected_slot}**"
+            )

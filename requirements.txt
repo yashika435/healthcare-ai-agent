@@ -1,7 +1,7 @@
 streamlit
 pandas
-qrcode
+reportlab
+python-docx
 pillow
+qrcode
 pypdf
-
-

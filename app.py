@@ -284,7 +284,8 @@ if st.button("Analyze Health"):
             st.write("- Not enough information to guess a condition.")
 
         # store as comma-separated text
-        possible = ", ".join(diseases) if diseases else ""
+        possible = ", ".join([d["disease"] for d in diseases]) if diseases else ""
+
 
         conn = sqlite3.connect("healthcare.db")
         c = conn.cursor()

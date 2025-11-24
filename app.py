@@ -843,8 +843,7 @@ if st.button("Find Recommended Doctor"):
 
                 st.session_state.sched_disease = top_disease
                 st.session_state.sched_speciality = speciality
-
-                st.success(f"Detected Condition: **{top_disease}**")
+                
                 st.info(f"Recommended Specialist: **{speciality}**")
 
 # STEP 2 – doctor selection

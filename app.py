@@ -845,7 +845,7 @@ if "sched_recommended_doctor" not in st.session_state:
     st.session_state.sched_recommended_doctor = None
 
 # STEP 1 – infer disease & speciality from last analysis
-if st.button("Find Recommended Doctor"):
+if st.button("Find Doctor"):
     if not appt_patient_name.strip():
         st.error("Please enter patient name.")
     else:
@@ -871,8 +871,6 @@ if st.button("Find Recommended Doctor"):
                 st.session_state.sched_speciality = final_speciality
                 st.session_state.sched_disease = top_disease_name
 
-                st.success(f"Detected Condition: **{top_disease_name}**")
-                st.info(f"Recommended Specialist: **{final_speciality}**")
 # STEP 2 – doctor selection (fixed to the recommended doctor)
 if st.session_state.sched_speciality:
 

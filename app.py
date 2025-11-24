@@ -382,6 +382,10 @@ if st.button("Analyze Symptoms"):
                 st.write(f"**{d['name']}** — {d['speciality']}")
                 st.write(f"Rating: ⭐ {d['rating']} | Exp: {d['experience']} yrs")
                 st.markdown("---")
+            # Save the top recommended doctor for scheduler
+            if ranked_doctors:
+                st.session_state.sched_recommended_doctor = ranked_doctors[0]["name"]
+                st.session_state.sched_recommended_speciality = ranked_doctors[0]["speciality"]
 
             # Follow-up plan
             st.subheader("⏰ Follow-up Recommendation")
@@ -864,30 +868,20 @@ if st.button("Find Recommended Doctor"):
 
                 st.success(f"Detected Condition: **{top_disease_name}**")
                 st.info(f"Recommended Specialist: **{final_speciality}**")
-# STEP 2 – doctor selection
+# STEP 2 – doctor selection (fixed to the recommended doctor)
 if st.session_state.sched_speciality:
-    speciality = st.session_state.sched_speciality
-    st.subheader(f"👨‍⚕️ Available {speciality}s")
 
-    doctors = DOCTOR_DB.get(speciality, [])
-    doctor_names = [d["name"] for d in doctors]
+    recommended_doc = st.session_state.get("sched_recommended_doctor")
+    recommended_spec = st.session_state.get("sched_recommended_speciality")
 
-    if doctor_names:
-        # pre-select recommended doctor if available
-        recommended = st.session_state.sched_recommended_doctor
-        if recommended in doctor_names:
-            default_index = doctor_names.index(recommended)
-        else:
-            default_index = 0
+    if recommended_doc:
+        st.subheader("👨‍⚕️ Assigned Doctor")
+        st.success(f"{recommended_doc} — {recommended_spec}")
 
-        st.session_state.sched_doctor = st.selectbox(
-            "Select Doctor:",
-            doctor_names,
-            index=default_index,
-        )
+        # Lock doctor selection
+        st.session_state.sched_doctor = recommended_doc
     else:
-        st.warning("No doctors configured for this speciality.")
-
+        st.warning("No recommended doctor found. Please run AI Symptom Helper first.")
 # STEP 3 – date + slots
 if st.session_state.sched_doctor:
     st.subheader("📆 Select Appointment Date")

@@ -117,17 +117,23 @@ def suggest_specialities(diseases_ranked):
     return top, specs
 
 
-# ---------------------------------------------------
-# DOCTOR RANKING ENGINE
-# ---------------------------------------------------
-
 def rank_doctors(preferred_specialities, top_n=3):
+    # Filter doctors ONLY from the specialist category requested
+    filtered = [doc for doc in DOCTOR_DB if doc["speciality"] in preferred_specialities]
+
+    # Fallback → if no matching specialist exists, use General Physician
+    if not filtered:
+        filtered = [doc for doc in DOCTOR_DB if doc["speciality"] == "General Physician"]
+
+    # Score the filtered doctors
     scored = []
-    for doc in DOCTOR_DB:
+    for doc in filtered:
         score = doc["rating"] * 2 + doc["experience"] * 0.5
-        if doc["speciality"] in preferred_specialities:
-            score += 3
         scored.append((score, doc))
 
+    # Sort by score
     scored.sort(key=lambda x: x[0], reverse=True)
+
     return [d for _, d in scored[:top_n]]
+
+

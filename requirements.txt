@@ -3,3 +3,6 @@ pandas
 reportlab
 python-docx
 medical-rules
+qrcode
+pillow
+pypdf

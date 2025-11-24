@@ -931,8 +931,6 @@ if st.session_state.sched_doctor:
             st.success(
                 f"✔ Appointment Confirmed!\n\n"
                 f"📌 Patient: **{appt_patient_name}**\n"
-                f"👨‍⚕️ Doctor: **{doctor}**\n"
-                f"🏥 Speciality: **{st.session_state.sched_speciality}**\n"
                 f"📅 Date: **{appt_date.strftime('%Y-%m-%d')}**\n"
                 f"⏰ Time: **{selected_slot}**"
             )

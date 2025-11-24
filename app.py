@@ -803,15 +803,16 @@ DOCTOR_DB = {
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 SLOTS = ["10:00 AM", "1:00 PM", "4:00 PM"]
 
+# Make all doctors available on ALL days with same 3 slots
 DOCTOR_AVAILABILITY = {}
 for speciality, doctors in DOCTOR_DB.items():
     DOCTOR_AVAILABILITY[speciality] = {}
     for d in doctors:
         name_doc = d["name"]
-        random_days = random.sample(DAYS, 3)
         DOCTOR_AVAILABILITY[speciality][name_doc] = {
-            day: SLOTS for day in random_days
+            day: SLOTS[:] for day in DAYS  # all 6 days
         }
+
 
 
 def weekday_from_date(dt):

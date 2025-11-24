@@ -21,6 +21,17 @@ from agent.treatment_engine import get_care_tips
 
 
 # =====================================================
+# SMALL HELPERS
+# =====================================================
+
+def disease_name(d):
+    """Safely get just the disease name from either a dict or a string."""
+    if isinstance(d, dict) and "disease" in d:
+        return d["disease"]
+    return str(d)
+
+
+# =====================================================
 # DATABASE SETUP
 # =====================================================
 
@@ -43,12 +54,14 @@ def init_db():
     conn.commit()
     conn.close()
 
+
 def reset_appointment_table():
     conn = sqlite3.connect("healthcare.db")
     c = conn.cursor()
     c.execute("DROP TABLE IF EXISTS appointments")
     conn.commit()
     conn.close()
+
 
 reset_appointment_table()
 
@@ -258,7 +271,7 @@ if st.button("Analyze Health"):
 
         extracted = extract_symptoms(symptoms)
         risk, issues = analyze_vitals(bp, heart_rate, temperature)
-        diseases = match_disease(extracted)  # expected list[str]
+        diseases = match_disease(extracted)  # could be list[str] or list[dict]
 
         st.subheader("🧪 Health Analysis Result")
 
@@ -276,13 +289,12 @@ if st.button("Analyze Health"):
         st.write("### Possible Diseases:")
         if diseases:
             for d in diseases:
-                st.write(f"- {d}")
+                st.write(f"- {disease_name(d)}")
         else:
             st.write("- Not enough information to guess a condition.")
 
-        # store as comma-separated text
-        possible = ", ".join([d["disease"] for d in diseases]) if diseases else ""
-
+        # store as comma-separated text of disease names
+        possible = ", ".join(disease_name(d) for d in diseases) if diseases else ""
 
         conn = sqlite3.connect("healthcare.db")
         c = conn.cursor()
@@ -652,7 +664,7 @@ if st.button("Generate Message"):
 
 
 # =====================================================
-# DOCTOR SPECIALITY MAPPING FOR SCHEDULER
+# DOCTOR SPECIALITY MAPPING FOR SCHEDULER (fallback)
 # =====================================================
 
 def scheduler_speciality(disease):
@@ -791,9 +803,9 @@ DOCTOR_AVAILABILITY = {}
 for speciality, doctors in DOCTOR_DB.items():
     DOCTOR_AVAILABILITY[speciality] = {}
     for d in doctors:
-        name = d["name"]
+        name_doc = d["name"]
         random_days = random.sample(DAYS, 3)
-        DOCTOR_AVAILABILITY[speciality][name] = {
+        DOCTOR_AVAILABILITY[speciality][name_doc] = {
             day: SLOTS for day in random_days
         }
 
@@ -809,7 +821,6 @@ def weekday_from_date(dt):
 st.markdown("---")
 st.header("📅 Smart Appointment Scheduler (AI Recommended)")
 
-
 appt_patient_name = st.text_input("Patient Name for Appointment:")
 
 # State for scheduler
@@ -821,6 +832,8 @@ if "sched_doctor" not in st.session_state:
     st.session_state.sched_doctor = None
 if "sched_date" not in st.session_state:
     st.session_state.sched_date = None
+if "sched_recommended_doctor" not in st.session_state:
+    st.session_state.sched_recommended_doctor = None
 
 # STEP 1 – infer disease & speciality from last analysis
 if st.button("Find Recommended Doctor"):
@@ -838,25 +851,36 @@ if st.button("Find Recommended Doctor"):
             if not ranked:
                 st.warning("Cannot detect disease. Try adding more symptoms.")
             else:
-                # Get all suggested doctors first
+                # Use same logic as AI helper
                 top_disease_name, specialities = suggest_specialities(ranked)
+
+                # If doctor engine returns nothing, fall back to mapping
+                if not specialities:
+                    speciality = scheduler_speciality(top_disease_name)
+                    specialities = [speciality]
+
                 doctors_ranked = rank_doctors(specialities)
 
-                # Force recommended speciality = speciality of top-ranked doctor
-                best_doctor = doctors_ranked[0]
-                final_speciality = best_doctor["speciality"]
+                if not doctors_ranked:
+                    # last fallback: just use speciality mapping directly
+                    speciality = scheduler_speciality(top_disease_name)
+                    st.session_state.sched_speciality = speciality
+                    st.session_state.sched_disease = top_disease_name
+                    st.session_state.sched_recommended_doctor = None
+                    st.success(f"Detected Condition: **{top_disease_name}**")
+                    st.info(f"Recommended Specialist: **{speciality}**")
+                else:
+                    best_doctor = doctors_ranked[0]
+                    final_speciality = best_doctor["speciality"]
+                    st.session_state.sched_speciality = final_speciality
+                    st.session_state.sched_disease = top_disease_name
+                    st.session_state.sched_recommended_doctor = best_doctor["name"]
 
-                st.session_state.sched_speciality = final_speciality
-                st.session_state.sched_disease = top_disease_name
-
-                st.success(f"Detected Condition: **{top_disease_name}**")
-                st.info(f"Recommended Specialist: **{final_speciality}**")
-
-
-                st.session_state.sched_disease = top_disease
-                
-                
-                st.info(f"Recommended Specialist: **{speciality}**")
+                    st.success(f"Detected Condition: **{top_disease_name}**")
+                    st.info(
+                        f"Recommended Specialist: **{final_speciality}**  "
+                        f"(Suggested doctor: **{best_doctor['name']}**)"
+                    )
 
 # STEP 2 – doctor selection
 if st.session_state.sched_speciality:
@@ -867,9 +891,17 @@ if st.session_state.sched_speciality:
     doctor_names = [d["name"] for d in doctors]
 
     if doctor_names:
+        # pre-select recommended doctor if available
+        recommended = st.session_state.sched_recommended_doctor
+        if recommended in doctor_names:
+            default_index = doctor_names.index(recommended)
+        else:
+            default_index = 0
+
         st.session_state.sched_doctor = st.selectbox(
             "Select Doctor:",
             doctor_names,
+            index=default_index,
         )
     else:
         st.warning("No doctors configured for this speciality.")

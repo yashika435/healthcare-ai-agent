@@ -25,11 +25,9 @@ from agent.treatment_engine import get_care_tips
 # =====================================================
 
 def init_db():
-    """Main patients table."""
     conn = sqlite3.connect("healthcare.db")
     c = conn.cursor()
-    c.execute(
-        """
+    c.execute("""
         CREATE TABLE IF NOT EXISTS patients (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT,
@@ -41,8 +39,7 @@ def init_db():
             risk_score TEXT,
             possible_diseases TEXT
         )
-        """
-    )
+    """)
     conn.commit()
     conn.close()
 

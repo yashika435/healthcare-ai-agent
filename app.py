@@ -851,19 +851,19 @@ if st.button("Find Recommended Doctor"):
             if not ranked:
                 st.warning("Cannot detect disease. Try adding more symptoms.")
             else:
-                # STEP A: take only TOP disease
-                top_disease = ranked[0]["disease"]
 
-                # STEP B: Map disease → speciality using your scheduler_speciality()
-                speciality = scheduler_speciality(top_disease)
+                # 🚀 Use ONLY the doctor_engine mapping
+                top_disease_name, specialities = suggest_specialities(ranked)
 
-                # Save in session
-                st.session_state.sched_disease = top_disease
-                st.session_state.sched_speciality = speciality
+                # 🚀 Choose the FIRST speciality as the recommended specialist
+                final_speciality = specialities[0]
 
-                st.success(f"Detected Condition: **{top_disease}**")
-                st.info(f"Recommended Specialist: **{speciality}**")
+                # Save result
+                st.session_state.sched_speciality = final_speciality
+                st.session_state.sched_disease = top_disease_name
 
+                st.success(f"Detected Condition: **{top_disease_name}**")
+                st.info(f"Recommended Specialist: **{final_speciality}**")
 # STEP 2 – doctor selection
 if st.session_state.sched_speciality:
     speciality = st.session_state.sched_speciality

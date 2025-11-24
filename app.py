@@ -838,11 +838,23 @@ if st.button("Find Recommended Doctor"):
             if not ranked:
                 st.warning("Cannot detect disease. Try adding more symptoms.")
             else:
-                top_disease = ranked[0]["disease"]
-                speciality = scheduler_speciality(top_disease)
+                # Get all suggested doctors first
+                top_disease_name, specialities = suggest_specialities(ranked)
+                doctors_ranked = rank_doctors(specialities)
+
+                # Force recommended speciality = speciality of top-ranked doctor
+                best_doctor = doctors_ranked[0]
+                final_speciality = best_doctor["speciality"]
+
+                st.session_state.sched_speciality = final_speciality
+                st.session_state.sched_disease = top_disease_name
+
+                st.success(f"Detected Condition: **{top_disease_name}**")
+                st.info(f"Recommended Specialist: **{final_speciality}**")
+
 
                 st.session_state.sched_disease = top_disease
-                st.session_state.sched_speciality = speciality
+                
                 
                 st.info(f"Recommended Specialist: **{speciality}**")
 

@@ -105,23 +105,27 @@ def row_to_patient(row):
 
 
 def fetch_latest_patient(name: str):
-    """Get the latest analysis for a given patient name."""
+    """Fetch latest patient entry using partial & case-insensitive match."""
     conn = sqlite3.connect("healthcare.db")
     c = conn.cursor()
+
+    # Case-insensitive + partial match
+    name_like = f"%{name.lower()}%"
+
     c.execute(
         """
         SELECT symptoms, risk_score
         FROM patients
-        WHERE name = ?
+        WHERE LOWER(name) LIKE ?
         ORDER BY id DESC
         LIMIT 1
         """,
-        (name,),
+        (name_like,),
     )
+
     result = c.fetchone()
     conn.close()
-    return result  # (symptoms, risk_score) or None
-
+    return result
 
 # =====================================================
 # REPORT GENERATORS (DOCX / PDF)

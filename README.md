@@ -3,7 +3,7 @@
 A Streamlit-based AI assistant that helps patients and caregivers monitor
 health status, medications, and wellness habits with intelligent insights.
 
-Built as part of Capabl Internship – Track A2: **Medication & Wellness Tracker**.
+Built as part of Capabl Internship –  **Medication & Wellness Tracker**.
 
 ---
 
@@ -178,3 +178,4 @@ healthcare-ai-agent/
 │
 ├── medical_rules.py        # Vital sign analysis rules
 └── README.md               # Project documentation
+
